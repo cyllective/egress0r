@@ -1,0 +1,113 @@
+# Default hosts:
+#    ports.egress0r.io: 116.203.4.62, 2a01:4f8:1c1c:b4c0::2
+# services.egress0r.io: 159.69.94.183, 2a01:4f8:1c1c:b4c0::1
+#     mail.egress0r.io: ^            , ^
+#      ftp.egress0r.io: ^            , ^
+#      dns.egress0r.io: ^            , ^
+#
+
+sanity:
+  override: # Valid options: NULL, 'enable', 'disable'. NULL doesn't override.
+    ipv4: NULL # Forcefully enable or disable IPv4 tests
+    ipv6: NULL # Forcefully enable or disable IPv6 tests
+
+check:
+  port: true
+  icmp: true
+  http: true
+  smtp: true
+  dns: true
+  ftp: true
+
+smtp:
+  timeout: 5
+  host: 'mail.egress0r.io'
+  port: 25
+  encryption: 'tls' # tls, ssl or NULL (no encryption)
+  from_addr: '<YOUR EMAIL ADDRESS HERE>'
+  to_addr: 'echo@egress0r.io'
+  username: NULL # optional for SMTP server auth
+  password: NULL # optional for SMTP server auth
+  exfil:
+      filename: 'credit-cards-100.txt'
+      payload_mode: 'attachment' # Either 'inline' or 'attachment', decides how the data is exfiltrated.
+  message: 'This is an exfil test.'
+  subject: 'egress0r.io - exfil test'
+
+port:
+  mode: 'top10'    # Options are: 'top10', 'top100' or 'all'
+  ipv4_addr: '116.203.4.62'
+  ipv6_addr: '2a01:4f8:1c1c:b4c0::2'
+  with_tcp: True
+  tcp_timeout: 5
+  with_udp: True
+  udp_timeout: 5
+
+http:
+  timeout: 5
+  exfil:
+    filename: 'ssn-100.txt'
+  verbs:
+    - 'GET'
+    - 'POST'
+    - 'PUT'
+    - 'PATCH'
+    - 'DELETE'
+  urls:
+    - 'http://services.egress0r.io/'
+    - 'https://services.egress0r.io/'
+  proxies:
+    http: NULL
+    https: NULL
+
+icmp:
+  timeout: 5  # How long to wait for an icmp echo reply message in seconds.
+  exfil:
+    filename: 'iban-100.txt'
+    max_chunks: 2
+    chunk_size: 10
+  target_hosts:
+    - '159.69.94.183'
+    - '2a01:4f8:1c1c:b4c0::1'
+
+dns:
+  timeout: 5 # How long to wait for an answer before aborting in seconds.
+  servers:   # An array of external DNS servers to query.
+    - '159.69.94.183'
+    - '2a01:4f8:1c1c:b4c0::1'
+  queries:  # Queries to perform against the internal and external DNS servers.
+    - record: 'services.egress0r.io'
+      record_type: 'A'
+      expected_answers:
+        - '159.69.94.183'
+    - record: 'services.egress0r.io'
+      record_type: 'AAAA'
+      expected_answers:
+        - '2a01:4f8:1c1c:b4c0::1'
+    - record: 'ports.egress0r.io'
+      record_type: 'A'
+      expected_answers:
+        - '116.203.4.62'
+    - record: 'ports.egress0r.io'
+      record_type: 'AAAA'
+      expected_answers:
+        - '2a01:4f8:1c1c:b4c0::2'
+    - record: 'eicar.egress0r.io'
+      record_type: 'TXT'
+
+  exfil:
+    filename: 'iban-100.txt'
+    nameserver: '159.69.94.183' # Which DNS to use for the exfiltration queries.
+    domain: 'exfil.egress0r.io' # Which base domain to use for the exfiltration process.
+    record_type: 'A'            # What type of record to query for.
+    max_chunks: 3               # Defines how many chunks are exfiltrated at maximum, set to NULL to exfiltrate all the data.
+    chunk_size: 30              # Defines how many bytes per chunk are exfiltrated.
+
+ftp:
+  timeout: 5  # Timeout in seconds to wait for the connection attempt.
+  host: 'ftp.egress0r.io'
+  username: 'anonymous'
+  password: 'anonymous@'
+  upload_dir: 'uploads'
+  exfil:
+      filename: 'credit-cards-100.txt'
