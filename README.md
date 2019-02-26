@@ -4,7 +4,7 @@ Test Firewall and DLP configurations by throwing around packets at the wrong pla
 
 [![asciicast](https://asciinema.org/a/3JzJBEBoyYtFQOwlLsBSn3kH6.svg)](https://asciinema.org/a/3JzJBEBoyYtFQOwlLsBSn3kH6)
 
-No clue what this is about? Read our [blog post](https://cyllective.com/blog/egress0r) about egress0r,
+No clue what this is about? Read our [blog post](https://cyllective.com/blog/post/egress0r/) about egress0r,
 this might give you some insight :)
 
 
