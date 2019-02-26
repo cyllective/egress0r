@@ -135,7 +135,7 @@ def load(print_errors=True):
     if cfg is None:
         try:
             with open(config_file) as cf:
-                cfg = yaml.load(cf)
+                cfg = yaml.load(cf, Loader=yaml.SafeLoader)
         except(OSError, FileNotFoundError):
             if print_errors:
                 print_fail('Config file not found or unable to read, '
