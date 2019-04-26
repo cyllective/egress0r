@@ -34,6 +34,11 @@ class Message:
         indicator = self._resolve_type_to_indicator()
         print(f'{" "*indent}[{self.when}]    [{indicator}] {self.message}')
 
+    def __str__(self):
+        return (f'{self.__class__.__qualname__}(message={self.message!r}, '
+                f'type_={self.type_}, '
+                f'when={self.when})')
+
 
 class PositiveMessage(Message):
     def __init__(self, message, when=None):
