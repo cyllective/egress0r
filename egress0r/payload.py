@@ -1,15 +1,16 @@
 import io
 import os
 
-
 from egress0r import constants
 
 
 class ExfilPayload:
 
-    DEFAULT_READ_MODE = 'rb'
+    DEFAULT_READ_MODE = "rb"
 
-    def __init__(self, filename, read_mode=DEFAULT_READ_MODE, chunk_size=None, max_chunks=None):
+    def __init__(
+        self, filename, read_mode=DEFAULT_READ_MODE, chunk_size=None, max_chunks=None
+    ):
         self.filename = filename
         self.read_mode = read_mode
         self.filepath = os.path.join(constants.data_dir, filename)
@@ -22,10 +23,10 @@ class ExfilPayload:
     @property
     def filehandle(self):
         if not self._fh:
-            if 'b' in self.read_mode:
+            if "b" in self.read_mode:
                 newline = None
             else:
-                newline = ''
+                newline = ""
             self._fh = open(self.filepath, self.read_mode, newline=newline)
         return self._fh
 
@@ -55,7 +56,7 @@ class ExfilPayload:
         return io.StringIO(self.data)
 
     def to_io(self):
-        if 'b' in self.read_mode:
+        if "b" in self.read_mode:
             return self.to_bytes_io()
         else:
             return self.to_string_io()
@@ -86,15 +87,24 @@ class ExfilPayload:
 
 class DNSExfilPayload(ExfilPayload):
 
-    DEFAULT_READ_MODE = 'rb'
-    DEFAULT_RECORD_TYPE = 'A'
+    DEFAULT_READ_MODE = "rb"
+    DEFAULT_RECORD_TYPE = "A"
     DEFAULT_CHUNK_SIZE = 30
     DEFAULT_MAX_CHUNKS = 30
 
-    def __init__(self, filename, domain, nameserver,
-                 record_type=DEFAULT_RECORD_TYPE, read_mode=DEFAULT_READ_MODE,
-                 chunk_size=DEFAULT_CHUNK_SIZE, max_chunks=DEFAULT_MAX_CHUNKS):
-        super().__init__(filename, read_mode, chunk_size=int(chunk_size), max_chunks=int(max_chunks))
+    def __init__(
+        self,
+        filename,
+        domain,
+        nameserver,
+        record_type=DEFAULT_RECORD_TYPE,
+        read_mode=DEFAULT_READ_MODE,
+        chunk_size=DEFAULT_CHUNK_SIZE,
+        max_chunks=DEFAULT_MAX_CHUNKS,
+    ):
+        super().__init__(
+            filename, read_mode, chunk_size=int(chunk_size), max_chunks=int(max_chunks)
+        )
         self.domain = domain
         self.record_type = record_type
         self.nameserver = nameserver
@@ -102,15 +112,19 @@ class DNSExfilPayload(ExfilPayload):
 
 class SMTPExfilPayload(ExfilPayload):
 
-    DEFAULT_READ_MODE = 'rb'
-    DEFAULT_EXFIL_MODE = 'inline'
-    VALID_EXFIL_MODES = ('inline', 'attachment')
+    DEFAULT_READ_MODE = "rb"
+    DEFAULT_EXFIL_MODE = "inline"
+    VALID_EXFIL_MODES = ("inline", "attachment")
 
-    def __init__(self, filename, exfil_mode=DEFAULT_EXFIL_MODE, read_mode=DEFAULT_READ_MODE):
+    def __init__(
+        self, filename, exfil_mode=DEFAULT_EXFIL_MODE, read_mode=DEFAULT_READ_MODE
+    ):
         if exfil_mode not in self.VALID_EXFIL_MODES:
-            raise ValueError(f'SMTPExfilPayload expects argument exfil_mode '
-                             f'to be one of {self.VALID_EXFIL_MODES}, got {exfil_mode!r}')
-        if exfil_mode == 'attachment':
-            read_mode = 'rb'
+            raise ValueError(
+                f"SMTPExfilPayload expects argument exfil_mode "
+                f"to be one of {self.VALID_EXFIL_MODES}, got {exfil_mode!r}"
+            )
+        if exfil_mode == "attachment":
+            read_mode = "rb"
         super().__init__(filename, read_mode)
         self.exfil_mode = exfil_mode or self.DEFAULT_EXFIL_MODE

@@ -1,28 +1,28 @@
 import binascii
-from ipaddress import ip_address
-import traceback
 from collections import namedtuple
+from ipaddress import ip_address
 
 import dns
-import dns.resolver
 import dns.exception
+import dns.resolver
 
-from egress0r.payload import DNSExfilPayload
-from egress0r.utils import print_fail, print_success, is_ipv4_addr, is_ipv6_addr
 from egress0r.message import NegativeMessage, PositiveMessage, UnknownMessage
+from egress0r.utils import (is_ipv4_addr, is_ipv6_addr)
 
+QueryStatus = namedtuple(
+    "QueryStatus",
+    [
+        "query",
+        "dns_server",
+        "answer",
+        "is_expected_answer",
+        "status",
+        "is_internal_dns",
+    ],
+)
 
-QueryStatus = namedtuple('QueryStatus', [
-    'query',
-    'dns_server',
-    'answer',
-    'is_expected_answer',
-    'status',
-    'is_internal_dns'
-])
 
 class Query:
-
     def __init__(self, record=None, record_type=None, expected_answers=None):
         self.record = record
         self.record_type = record_type
@@ -31,14 +31,14 @@ class Query:
     def extract_answer(self, answer):
         """Extract the answer of a resolved dns query."""
         assert isinstance(answer, dns.resolver.Answer)
-        if self.record_type in ('A', 'AAAA', dns.rdatatype.A, dns.rdatatype.AAAA):
+        if self.record_type in ("A", "AAAA", dns.rdatatype.A, dns.rdatatype.AAAA):
             return {a.address for a in answer}
-        if self.record_type in ('TXT', dns.rdatatype.TXT):
+        if self.record_type in ("TXT", dns.rdatatype.TXT):
             return {str(a).strip('"') for a in answer}
-        if self.record_type in ('MX', dns.rdatatype.MX):
-            return {str(a).split(' ')[1].rstrip('.') for a in answer}
-        if self.record_type in ('CNAME', dns.rdatatype.CNAME):
-            return {str(a).rstrip('.') for a in answer}
+        if self.record_type in ("MX", dns.rdatatype.MX):
+            return {str(a).split(" ")[1].rstrip(".") for a in answer}
+        if self.record_type in ("CNAME", dns.rdatatype.CNAME):
+            return {str(a).rstrip(".") for a in answer}
         return None
 
     def answer_is_expected(self, answer):
@@ -55,16 +55,25 @@ class DNSCheck:
     """Perform DNS related checks."""
 
     DEFAULT_TIMEOUT = 5
-    START_MESSAGE = 'Performing DNS checks...'
+    START_MESSAGE = "Performing DNS checks..."
 
-    def __init__(self, dns_servers, queries, timeout=DEFAULT_TIMEOUT,
-                 with_ipv4=True, with_ipv6=True, exfil_payload=None):
+    def __init__(
+        self,
+        dns_servers,
+        queries,
+        timeout=DEFAULT_TIMEOUT,
+        with_ipv4=True,
+        with_ipv6=True,
+        exfil_payload=None,
+    ):
         self.with_ipv4 = with_ipv4
         self.with_ipv6 = with_ipv6
         self.queries = queries
         self.timeout = timeout
         self.external_dns_servers = self._filter_nameservers(dns_servers)
-        self.internal_dns_servers = self._filter_nameservers(self.read_internal_nameservers())
+        self.internal_dns_servers = self._filter_nameservers(
+            self.read_internal_nameservers()
+        )
         self.exfil_payload = exfil_payload
 
     def _setup_resolver(self, timeout, nameservers=None):
@@ -78,12 +87,12 @@ class DNSCheck:
     def read_internal_nameservers(self):
         """Read locally configured nameservers from /etc/resolv.conf."""
         ns = set()
-        with open('/etc/resolv.conf') as fin:
+        with open("/etc/resolv.conf") as fin:
             for line in fin.readlines():
-                if line.startswith('nameserver '):
+                if line.startswith("nameserver "):
                     try:
-                        ns.add(str(ip_address(line.split('nameserver ')[1].strip())))
-                    except(IndexError, ValueError):
+                        ns.add(str(ip_address(line.split("nameserver ")[1].strip())))
+                    except (IndexError, ValueError):
                         pass
         return tuple(ns)
 
@@ -111,8 +120,9 @@ class DNSCheck:
                 except dns.exception.DNSException:
                     pass
 
-                yield QueryStatus(query, dns_server, answer, was_expected, status, is_internal_dns)
-
+                yield QueryStatus(
+                    query, dns_server, answer, was_expected, status, is_internal_dns
+                )
 
     def exfil(self, payload):
         """Exfiltrate the passed payload.
@@ -149,16 +159,15 @@ class DNSCheck:
             payload.chunk_size, hex encoded, bytes.
         """
         resolver = self._setup_resolver(self.timeout, [payload.nameserver])
-        hex_fname = binascii.hexlify(payload.filename.encode('ascii')).decode('ascii')
+        hex_fname = binascii.hexlify(payload.filename.encode("ascii")).decode("ascii")
         try:
-            resolver.query(f'sof.{hex_fname}.{payload.domain}', payload.record_type)
+            resolver.query(f"sof.{hex_fname}.{payload.domain}", payload.record_type)
             for chunk in payload.chunk_iter():
-                encoded_chunk = binascii.hexlify(chunk).decode('ascii')
-                resolver.query(f'{encoded_chunk}.{payload.domain}', payload.record_type)
-            resolver.query(f'eof.{hex_fname}.{payload.domain}', payload.record_type)
+                encoded_chunk = binascii.hexlify(chunk).decode("ascii")
+                resolver.query(f"{encoded_chunk}.{payload.domain}", payload.record_type)
+            resolver.query(f"eof.{hex_fname}.{payload.domain}", payload.record_type)
             return True
         except dns.exception.DNSException:
-            #traceback.print_exc()
             pass
         return False
 
@@ -174,14 +183,18 @@ class DNSCheck:
 
     def _query_status_to_message(self, qs, is_internal_dns=False):
         """Convert QueryStatus objects to Messages."""
-        internal_or_external = 'external'
+        internal_or_external = "external"
         if is_internal_dns:
-            internal_or_external = 'internal'
-        success_msg = (f'Resolved {qs.query.record_type} {qs.query.record} with '
-                       f'{internal_or_external} DNS {qs.dns_server}')
-        unknown_msg = success_msg + ' - BUT the response was not expected'
-        fail_msg = (f'Failed to resolve {qs.query.record_type} {qs.query.record} '
-                    f'with {internal_or_external} DNS {qs.dns_server}')
+            internal_or_external = "internal"
+        success_msg = (
+            f"Resolved {qs.query.record_type} {qs.query.record} with "
+            f"{internal_or_external} DNS {qs.dns_server}"
+        )
+        unknown_msg = success_msg + " - BUT the response was not expected"
+        fail_msg = (
+            f"Failed to resolve {qs.query.record_type} {qs.query.record} "
+            f"with {internal_or_external} DNS {qs.dns_server}"
+        )
         if qs.status and qs.is_expected_answer is False:
             return UnknownMessage(message=unknown_msg)
         if qs.status:
@@ -194,15 +207,16 @@ class DNSCheck:
         ns_tuple = (self.external_dns_servers, self.internal_dns_servers)
         for is_internal, nameservers in zip(int_or_ext, ns_tuple):
             response_iter = self.perform_queries(
-                self.queries,
-                nameservers,
-                is_internal_dns=is_internal)
+                self.queries, nameservers, is_internal_dns=is_internal
+            )
             for query_status in response_iter:
                 yield self._query_status_to_message(query_status, is_internal)
 
-        if isinstance(self.exfil_payload, DNSExfilPayload):
+        if self.exfil_payload is not None:
             exfil_success = self.exfil(self.exfil_payload)
             if exfil_success:
-                yield PositiveMessage(f'Exfiltrated {self.exfil_payload.chunks_total_length} bytes of data to {self.exfil_payload.domain}')
+                yield PositiveMessage(
+                    f"Exfiltrated {self.exfil_payload.chunks_total_length} bytes of data to {self.exfil_payload.domain}"
+                )
             else:
-                yield NegativeMessage('Failed to exfiltrate data')
+                yield NegativeMessage("Failed to exfiltrate data")

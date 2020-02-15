@@ -1,5 +1,5 @@
-import enum
 import datetime
+import enum
 
 from colorama import Fore
 
@@ -14,6 +14,13 @@ class MessageType(enum.IntEnum):
 class Message:
     """Holds information about a performed test step."""
 
+    INDICATOR_MAP = {
+        MessageType.FAIL.name: Fore.LIGHTRED_EX + "x" + Fore.RESET,
+        MessageType.SUCCESS.name: Fore.LIGHTGREEN_EX + "✓" + Fore.RESET,
+        MessageType.INFO.name: Fore.LIGHTBLUE_EX + "*" + Fore.RESET,
+        MessageType.UNKNOWN.name: Fore.LIGHTYELLOW_EX + "?" + Fore.RESET,
+    }
+
     def __init__(self, message, type_=None, when=None):
         self.message = message
         self.type_ = type_
@@ -21,23 +28,16 @@ class Message:
             self.type_ = MessageType.INFO
         self.when = when or datetime.datetime.utcnow()
 
-    def _resolve_type_to_indicator(self):
-        indicator_map = {
-            MessageType.FAIL.name: Fore.LIGHTRED_EX + 'x' + Fore.RESET,
-            MessageType.SUCCESS.name: Fore.LIGHTGREEN_EX + '✓' + Fore.RESET,
-            MessageType.INFO.name: Fore.LIGHTBLUE_EX + '*' + Fore.RESET,
-            MessageType.UNKNOWN.name: Fore.LIGHTYELLOW_EX + '?' + Fore.RESET
-        }
-        return indicator_map[self.type_.name]
-
     def print(self, indent=4):
-        indicator = self._resolve_type_to_indicator()
+        indicator = self.INDICATOR_MAP[self.type_.name]
         print(f'{" "*indent}[{self.when}]    [{indicator}] {self.message}')
 
     def __str__(self):
-        return (f'{self.__class__.__qualname__}(message={self.message!r}, '
-                f'type_={self.type_}, '
-                f'when={self.when})')
+        return (
+            f"{self.__class__.__qualname__}(message={self.message!r}, "
+            f"type_={self.type_}, "
+            f"when={self.when})"
+        )
 
 
 class PositiveMessage(Message):

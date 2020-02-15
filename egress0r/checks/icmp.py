@@ -1,19 +1,24 @@
 import random
-import traceback
 
-from scapy.all import IP, IPv6, ICMP, ICMPv6EchoRequest, Raw, sr1
+from scapy.all import ICMP, IP, ICMPv6EchoRequest, IPv6, Raw, sr1
 
+from egress0r.message import InfoMessage, NegativeMessage, PositiveMessage
 from egress0r.utils import is_ipv4_addr, is_ipv6_addr
-from egress0r.message import NegativeMessage, PositiveMessage, InfoMessage
 
 
 class ICMPCheck:
 
     DEFAULT_TIMEOUT = 5
-    START_MESSAGE = 'Performing ICMP related checks...'
+    START_MESSAGE = "Performing ICMP related checks..."
 
-    def __init__(self, target_hosts, timeout=DEFAULT_TIMEOUT,
-                 exfil_payload=None, with_ipv4=True, with_ipv6=True):
+    def __init__(
+        self,
+        target_hosts,
+        timeout=DEFAULT_TIMEOUT,
+        exfil_payload=None,
+        with_ipv4=True,
+        with_ipv6=True,
+    ):
         self.target_hosts = target_hosts
         self.exfil_payload = exfil_payload
         self.timeout = timeout
@@ -32,12 +37,11 @@ class ICMPCheck:
         Returns bool if the target responded.
         """
         random_id = self.random_icmp_id()
-        packet = IP(dst=target)/ICMP(id=random_id)
+        packet = IP(dst=target) / ICMP(id=random_id)
         try:
             answer = self._send_packet(packet)
             return answer.payload.id == random_id
-        except(TypeError, ValueError, AttributeError, KeyError):
-            #traceback.print_exc()
+        except (TypeError, ValueError, AttributeError, KeyError):
             pass
         return False
 
@@ -46,12 +50,11 @@ class ICMPCheck:
         Returns bool if the target responded.
         """
         random_id = self.random_icmp_id()
-        packet = IPv6(dst=target)/ICMPv6EchoRequest(id=random_id)
+        packet = IPv6(dst=target) / ICMPv6EchoRequest(id=random_id)
         try:
             answer = self._send_packet(packet)
             return answer.payload.id == random_id
-        except(TypeError, ValueError, AttributeError, KeyError):
-            #traceback.print_exc()
+        except (TypeError, ValueError, AttributeError, KeyError):
             pass
         return False
 
@@ -62,12 +65,11 @@ class ICMPCheck:
         try:
             for chunk in payload.chunk_iter():
                 random_id = self.random_icmp_id()
-                packet = IP(dst=target)/ICMP(id=random_id)/Raw(load=chunk)
+                packet = IP(dst=target) / ICMP(id=random_id) / Raw(load=chunk)
                 answer = self._send_packet(packet)
                 if chunk not in bytes(answer.payload.payload):
                     return False
-        except(TypeError, ValueError, AttributeError, KeyError):
-            #traceback.print_exc()
+        except (TypeError, ValueError, AttributeError, KeyError):
             return False
         return True
 
@@ -78,12 +80,11 @@ class ICMPCheck:
         try:
             for chunk in payload.chunk_iter():
                 random_id = self.random_icmp_id()
-                packet = IPv6(dst=target)/ICMPv6EchoRequest(id=random_id, data=chunk)
+                packet = IPv6(dst=target) / ICMPv6EchoRequest(id=random_id, data=chunk)
                 answer = self._send_packet(packet)
                 if chunk not in bytes(answer.payload.data):
                     return False
-        except(TypeError, ValueError, AttributeError, KeyError):
-            #traceback.print_exc()
+        except (TypeError, ValueError, AttributeError, KeyError):
             return False
         return True
 
@@ -92,20 +93,24 @@ class ICMPCheck:
         Returns: Bool indicating if the target sent an echo reply.
         """
         if is_ipv4_addr(target) is False and is_ipv6_addr(target) is False:
-            raise ValueError(f'ICMPCheck.ping expected target to be an '
-                             f'IPv4 or IPv6 address, got {target!r}')
+            raise ValueError(
+                f"ICMPCheck.ping expected target to be an "
+                f"IPv4 or IPv6 address, got {target!r}"
+            )
         if is_ipv4_addr(target) and self._with_ipv4:
             return self.ping_ipv4(target)
         if is_ipv6_addr(target) and self._with_ipv6:
             return self.ping_ipv6(target)
 
-    def exfil(self, target, payload):
+    def _exfil(self, target, payload):
         """Exfiltrate the payload to the target.
         Returns: Bool indicating exfil success.
         """
         if is_ipv4_addr(target) is False and is_ipv6_addr(target) is False:
-            raise ValueError(f'ICMPCheck.exfil expected target to be an '
-                             f'IPv4 or IPv6 address, got {target!r}')
+            raise ValueError(
+                f"ICMPCheck.exfil expected target to be an "
+                f"IPv4 or IPv6 address, got {target!r}"
+            )
         if is_ipv4_addr(target) and self._with_ipv4:
             return self.exfil_ipv4(target, payload)
         if is_ipv6_addr(target) and self._with_ipv6:
@@ -113,10 +118,12 @@ class ICMPCheck:
 
     def _to_message(self, target, status, payload=None):
         if payload:
-            exfil_success = f'Exfiltrated {payload.chunks_total_length} bytes to {target}'
-            exfil_fail = f'Failed to exfiltrate data to {target}'
-        icmp_fail = f'No echo response from {target}'
-        icmp_success = f'Received echo response from {target}'
+            exfil_success = (
+                f"Exfiltrated {payload.chunks_total_length} bytes to {target}"
+            )
+            exfil_fail = f"Failed to exfiltrate data to {target}"
+        icmp_fail = f"No echo response from {target}"
+        icmp_success = f"Received echo response from {target}"
 
         if status is True:
             msg = icmp_success
@@ -132,7 +139,7 @@ class ICMPCheck:
     def check(self):
         for target in self.target_hosts:
             if is_ipv4_addr(target) is False and is_ipv6_addr(target) is False:
-                yield InfoMessage(f'Skipped target {target!r} because it\'s not an IP')
+                yield InfoMessage(f"Skipped target {target!r} because it's not an IP")
                 continue
             if is_ipv4_addr(target) and not self._with_ipv4:
                 continue
@@ -142,5 +149,5 @@ class ICMPCheck:
             yield self._to_message(target, status)
 
             if self.exfil_payload:
-                status = self.exfil(target, self.exfil_payload)
+                status = self._exfil(target, self.exfil_payload)
                 yield self._to_message(target, status, self.exfil_payload)
