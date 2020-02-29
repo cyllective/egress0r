@@ -13,18 +13,8 @@ def _fmt_msg(status, message, indent=4, timestamp=None):
     return f'{" "*indent}[{timestamp_}]    [{status}] {message}'
 
 
-def print_success(message, indent=4):
-    status = colorama.Fore.LIGHTGREEN_EX + "✓" + colorama.Fore.RESET
-    print(_fmt_msg(status, message, indent))
-
-
 def print_fail(message, indent=4):
     status = colorama.Fore.LIGHTRED_EX + "x" + colorama.Fore.RESET
-    print(_fmt_msg(status, message, indent))
-
-
-def print_unknown(message, indent=4):
-    status = colorama.Fore.LIGHTMAGENTA_EX + "?" + colorama.Fore.RESET
     print(_fmt_msg(status, message, indent))
 
 
@@ -74,6 +64,9 @@ def ip_to_url(addr, scheme=None, port=None):
     """Transform IPv4 and IPv6 addresses to URLs.
 
     >>> ip_to_url("127.0.0.1", scheme=None, port=None)
+    'http://127.0.0.1/'
+
+    >>> ip_to_url("127.0.0.1", scheme="http", port=80)
     'http://127.0.0.1/'
 
     >>> ip_to_url("127.0.0.1", scheme=None, port=8080)
