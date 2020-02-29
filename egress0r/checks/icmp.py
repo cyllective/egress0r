@@ -25,18 +25,19 @@ class ICMPCheck:
         self._with_ipv4 = with_ipv4
         self._with_ipv6 = with_ipv6
 
-    def random_icmp_id(self):
+    @staticmethod
+    def _random_icmp_id():
         """Generate a random ICMP id value."""
         return random.randint(1, 32767)
 
     def _send_packet(self, pkt):
         return sr1(pkt, verbose=False, timeout=self.timeout)
 
-    def ping_ipv4(self, target):
+    def _ping_ipv4(self, target):
         """Request an ICMP Echo Reply from the target host via IPv4.
         Returns bool if the target responded.
         """
-        random_id = self.random_icmp_id()
+        random_id = self._random_icmp_id()
         packet = IP(dst=target) / ICMP(id=random_id)
         try:
             answer = self._send_packet(packet)
@@ -45,11 +46,11 @@ class ICMPCheck:
             pass
         return False
 
-    def ping_ipv6(self, target):
+    def _ping_ipv6(self, target):
         """Request an ICMP echo reply from the target host via IPv6.
         Returns bool if the target responded.
         """
-        random_id = self.random_icmp_id()
+        random_id = self._random_icmp_id()
         packet = IPv6(dst=target) / ICMPv6EchoRequest(id=random_id)
         try:
             answer = self._send_packet(packet)
@@ -58,13 +59,19 @@ class ICMPCheck:
             pass
         return False
 
-    def exfil_ipv4(self, target, payload):
-        """Exfiltrate the payoad via ICMP echo eequests over IPv4.
-        Data is simply stored in the ICMP packet's payload without modification.
+    def _exfil_ipv4(self, target, payload):
+        """
+        Exfiltrate the payload via ICMP echo requests over IPv4.
+
+        Data is simply stored in the ICMP packet's payload without any kind of modification.
+
+        :param target: an IPv4 address
+        :param payload: the payload to exfiltrate
+        :return:
         """
         try:
             for chunk in payload.chunk_iter():
-                random_id = self.random_icmp_id()
+                random_id = self._random_icmp_id()
                 packet = IP(dst=target) / ICMP(id=random_id) / Raw(load=chunk)
                 answer = self._send_packet(packet)
                 if chunk not in bytes(answer.payload.payload):
@@ -73,13 +80,19 @@ class ICMPCheck:
             return False
         return True
 
-    def exfil_ipv6(self, target, payload):
-        """Exfiltrate the payload ICMP echo requests over IPv6.
-        Data is simply stored in the ICMP packet's payload without modification.
+    def _exfil_ipv6(self, target, payload):
+        """
+        Exfiltrate the payload via ICMP echo requests over IPv6.
+
+        Data is simply stored in the ICMP packet's payload without any kind of modification.
+
+        :param target: an IPv6 address
+        :param payload: the payload to exfiltrate
+        :return: bool, indicating success
         """
         try:
             for chunk in payload.chunk_iter():
-                random_id = self.random_icmp_id()
+                random_id = self._random_icmp_id()
                 packet = IPv6(dst=target) / ICMPv6EchoRequest(id=random_id, data=chunk)
                 answer = self._send_packet(packet)
                 if chunk not in bytes(answer.payload.data):
@@ -88,9 +101,12 @@ class ICMPCheck:
             return False
         return True
 
-    def ping(self, target):
-        """Ping the target.
-        Returns: Bool indicating if the target sent an echo reply.
+    def _ping(self, target):
+        """
+        Ping the target.
+
+        :param target:
+        :return: bool, indicating that the target sent an echo reply.
         """
         if is_ipv4_addr(target) is False and is_ipv6_addr(target) is False:
             raise ValueError(
@@ -98,13 +114,17 @@ class ICMPCheck:
                 f"IPv4 or IPv6 address, got {target!r}"
             )
         if is_ipv4_addr(target) and self._with_ipv4:
-            return self.ping_ipv4(target)
+            return self._ping_ipv4(target)
         if is_ipv6_addr(target) and self._with_ipv6:
-            return self.ping_ipv6(target)
+            return self._ping_ipv6(target)
 
     def _exfil(self, target, payload):
-        """Exfiltrate the payload to the target.
-        Returns: Bool indicating exfil success.
+        """
+        Exfiltrate test data.
+
+        :param target: an IPv4 or IPv6 address
+        :param payload:
+        :return: bool, indicating success
         """
         if is_ipv4_addr(target) is False and is_ipv6_addr(target) is False:
             raise ValueError(
@@ -112,9 +132,9 @@ class ICMPCheck:
                 f"IPv4 or IPv6 address, got {target!r}"
             )
         if is_ipv4_addr(target) and self._with_ipv4:
-            return self.exfil_ipv4(target, payload)
+            return self._exfil_ipv4(target, payload)
         if is_ipv6_addr(target) and self._with_ipv6:
-            return self.exfil_ipv6(target, payload)
+            return self._exfil_ipv6(target, payload)
 
     def _to_message(self, target, status, payload=None):
         if payload:
@@ -145,7 +165,7 @@ class ICMPCheck:
                 continue
             if is_ipv6_addr(target) and not self._with_ipv6:
                 continue
-            status = self.ping(target)
+            status = self._ping(target)
             yield self._to_message(target, status)
 
             if self.exfil_payload:

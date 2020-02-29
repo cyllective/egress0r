@@ -1,6 +1,5 @@
 import smtplib
 import socket
-import traceback
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -90,11 +89,14 @@ class SMTPCheck:
         msg.attach(MIMEText(body_raw))
         return msg
 
-    def _exfil(self, payload):
+    def _get_smtp_client(self):
         smtp_client = smtplib.SMTP
         if self.encryption == "ssl":
             smtp_client = smtplib.SMTP_SSL
+        return smtp_client
 
+    def _exfil(self, payload):
+        smtp_client = self._get_smtp_client()
         try:
             with smtp_client(self.host, self.port, timeout=self.timeout) as smtp:
                 if self.encryption == "tls":
@@ -108,7 +110,6 @@ class SMTPCheck:
                 smtp.send_message(msg, self.from_addr, self.to_addr)
                 return True
         except (smtplib.SMTPException, socket.gaierror, socket.timeout, OSError):
-            # traceback.print_exc()
             pass
         return False
 

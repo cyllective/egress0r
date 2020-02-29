@@ -25,12 +25,9 @@ class FTPCheck:
         self.exfil_payload = exfil_payload
         self.timeout = timeout
 
-    def upload(self, payload, upload_dir=None, randomize_filename=True):
+    def upload(self, payload, upload_dir=None):
         """Upload the payload to the configured remote host."""
-        if randomize_filename:
-            fname = random_filename(length=120, extension=".bin")
-        else:
-            fname = payload.filename
+        filename = random_filename(length=120, extension=".bin")
         try:
             with ftplib.FTP(
                 self.host, self.username, self.password, timeout=self.timeout
@@ -40,11 +37,10 @@ class FTPCheck:
                 if upload_dir:
                     ftp.cwd(upload_dir)
 
-                result = ftp.storlines(f"STOR {fname}", payload.filehandle)
+                result = ftp.storlines(f"STOR {filename}", payload.filehandle)
                 if "226 Transfer complete" in result:
                     return True
         except ftplib.all_errors:
-            # traceback.print_exc()
             pass
 
         return False
@@ -52,9 +48,6 @@ class FTPCheck:
     def check(self):
         status = self.upload(self.exfil_payload, self.upload_dir)
         if status is True:
-            yield PositiveMessage(
-                f"Exfiltrated {self.exfil_payload.data_length} bytes to {self.host}"
-            )
-            return
-        yield NegativeMessage(f"Failed to exfiltrate data to {self.host}")
-        return
+            yield PositiveMessage(f"Exfiltrated {self.exfil_payload.data_length} bytes to {self.host}")
+        else:
+            yield NegativeMessage(f"Failed to exfiltrate data to {self.host}")

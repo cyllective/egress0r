@@ -169,7 +169,8 @@ class PortCheck:
         for port, status in pool.imap(check_func, iterable=port_iter):
             yield port, status
 
-    def _message_producer(self, port, protocol, status, host):
+    @staticmethod
+    def _message_producer(port, protocol, status, host):
         success_msg = f"Connected via {port}/{protocol} to {host}"
         fail_msg = f"Failed to connect via {port}/{protocol} to {host}"
         if status:

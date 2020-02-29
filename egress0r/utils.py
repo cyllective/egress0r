@@ -1,12 +1,9 @@
 import datetime
 import ipaddress
-import os
 import random
 import string
 
 import colorama
-
-from egress0r import constants
 
 
 def _fmt_msg(status, message, indent=4, timestamp=None):
@@ -36,13 +33,6 @@ def print_info(message, indent=4):
     print(_fmt_msg(status, message, indent))
 
 
-def print_by_status(message, status):
-    if status is True:
-        print_success(message)
-    else:
-        print_fail(message)
-
-
 def random_filename(length=15, extension=None):
     name = "".join(random.choices(string.ascii_letters + string.digits, k=length))
     if extension:
@@ -52,14 +42,13 @@ def random_filename(length=15, extension=None):
     return name
 
 
-def load_exfil_data(filename, mode=None):
-    if not mode:
-        mode = "r"
-    with open(os.path.join(constants.data_dir, filename), mode) as fin:
-        return fin.read()
-
-
 def is_ipv4_addr(addr):
+    """
+    Determine if the passed ``addr`` is a valid IPv4 address.
+
+    :param addr: the string to check
+    :return: bool
+    """
     """Determine if the passed address string is a valid IPv4 addresss.
     Returns bool.
     """
@@ -84,11 +73,23 @@ def is_ipv6_addr(addr):
 def ip_to_url(addr, scheme=None, port=None):
     """Transform IPv4 and IPv6 addresses to URLs.
 
-    Examples:
-        ip_to_url('127.0.0.1', scheme=None, port=None) -> 'http://127.0.0.1/'
-        ip_to_url('127.0.0.1', scheme=None, port=8080) -> 'http://127.0.0.1:8080/'
-        ip_to_url('::1', scheme=None, port=8800) -> 'http://[::1]:8800/'
-        ip_to_url('::1', scheme=https, port=8443) -> 'https://[::1]:8443/'
+    >>> ip_to_url("127.0.0.1", scheme=None, port=None)
+    'http://127.0.0.1/'
+
+    >>> ip_to_url("127.0.0.1", scheme=None, port=8080)
+    'http://127.0.0.1:8080/'
+
+    >>> ip_to_url("127.0.0.1", scheme="https", port=None)
+    'https://127.0.0.1/'
+
+    >>> ip_to_url("127.0.0.1", scheme="https", port=443)
+    'https://127.0.0.1/'
+
+    >>> ip_to_url("::1", scheme=None, port=8800)
+    'http://[::1]:8800/'
+
+    >>> ip_to_url("::1", scheme="https", port=8443)
+    'https://[::1]:8443/'
     """
     if not scheme:
         scheme = "http"
@@ -101,7 +102,9 @@ def ip_to_url(addr, scheme=None, port=None):
             "ip_to_url expected argument 'addr' to be an IPv4 or IPv6 address."
         )
 
-    if port is None or port == 80:
+    if port in (None, 80):
+        url += "/"
+    elif port in (None, 443) and scheme == "https":
         url += "/"
     else:
         url += f":{port}/"
