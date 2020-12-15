@@ -29,6 +29,15 @@ def validate(config):
                 }
             },
         },
+        "auth": {
+            "type": "dict",
+            "required": True,
+            "schema": {
+                "token": {"type": "string", "required": True},
+                "ipv4_url": {"type": "string", "required": True, "empty": False},
+                "ipv6_url": {"type": "string", "required": True, "empty": False},
+            },
+        },
         "check": {
             "type": "dict",
             "required": True,

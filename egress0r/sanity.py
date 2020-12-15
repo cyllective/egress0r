@@ -1,8 +1,12 @@
+import socket
 import ipaddress
 
+import urllib3
 import netifaces
+
 from egress0r import config
 from egress0r.utils import print_fail, print_info
+import egress0r.requests_wrapper as requests
 
 HAS_IPV4_ADDR = None
 HAS_IPV6_ADDR = None
@@ -33,6 +37,60 @@ def has_ipv6_addr():
             except (ValueError, KeyError, TypeError):
                 continue
     return False
+
+
+def _auth_ipv4(url, token):
+    try:
+        response = requests.post(
+            url, json={"token": token}, family=socket.AF_INET, timeout=3
+        )
+    except requests.exceptions.RequestException:
+        print_fail("Failed to verify egress0r token for IPv4")
+        return False
+    if response.status_code != 200:
+        message = response.json().get("message")
+        if message:
+            print_fail(message)
+        else:
+            print_fail("Failed to verify egress0r token for IPv4")
+        return False
+
+    print_info("IPv4 authenticated")
+    return True
+
+
+def _auth_ipv6(url, token):
+    try:
+        response = requests.post(
+            url, json={"token": token}, family=socket.AF_INET6, timeout=3
+        )
+    except requests.exceptions.RequestException:
+        print_fail("Failed to verify egress0r token for IPv6")
+        return False
+    if response.status_code != 200:
+        message = response.json().get("message")
+        if message:
+            print_fail(message)
+        else:
+            print_fail("Failed to verify egress0r token for IPv6")
+        return False
+
+    print_info("IPv6 authenticated")
+    return True
+
+
+def auth_check(cfg):
+    token = cfg["auth"]["token"]
+    if HAS_IPV4_ADDR:
+        if not _auth_ipv4(cfg["auth"]["ipv4_url"], token):
+            return False
+
+    if HAS_IPV6_ADDR:
+        if not _auth_ipv6(cfg["auth"]["ipv6_url"], token):
+            return False
+
+    return True
+
 
 
 def override_check(cfg):
@@ -98,6 +156,9 @@ def check():
         return False
 
     if not ip_check(cfg):
+        return False
+
+    if not auth_check(cfg):
         return False
 
     print()

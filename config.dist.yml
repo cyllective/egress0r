@@ -11,6 +11,11 @@ sanity:
     ipv4: NULL # Forcefully enable or disable IPv4 tests
     ipv6: NULL # Forcefully enable or disable IPv6 tests
 
+auth:
+  token: "<YOUR EGRESS0R TOKEN HERE>"
+  ipv4_url: "https://x/auth/ipv4"
+  ipv6_url: "https://x/auth/ipv6"
+
 check:
   port: true
   icmp: true
