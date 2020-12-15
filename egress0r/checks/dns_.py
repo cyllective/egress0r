@@ -7,7 +7,7 @@ import dns.exception
 import dns.resolver
 
 from egress0r.message import NegativeMessage, PositiveMessage, UnknownMessage
-from egress0r.utils import (is_ipv4_addr, is_ipv6_addr)
+from egress0r.utils import is_ipv4_addr, is_ipv6_addr
 
 QueryStatus = namedtuple(
     "QueryStatus",

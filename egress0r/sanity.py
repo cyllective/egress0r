@@ -92,7 +92,6 @@ def auth_check(cfg):
     return True
 
 
-
 def override_check(cfg):
     global HAS_IPV4_ADDR
     global HAS_IPV6_ADDR

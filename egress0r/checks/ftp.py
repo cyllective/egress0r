@@ -48,6 +48,8 @@ class FTPCheck:
     def check(self):
         status = self.upload(self.exfil_payload, self.upload_dir)
         if status is True:
-            yield PositiveMessage(f"Exfiltrated {self.exfil_payload.data_length} bytes to {self.host}")
+            yield PositiveMessage(
+                f"Exfiltrated {self.exfil_payload.data_length} bytes to {self.host}"
+            )
         else:
             yield NegativeMessage(f"Failed to exfiltrate data to {self.host}")
