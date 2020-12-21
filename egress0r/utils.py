@@ -10,7 +10,7 @@ def _fmt_msg(status, message, timestamp=None):
     timestamp_ = timestamp or datetime.datetime.utcnow().strftime(
         "%Y-%m-%d %H:%M:%S.%f"
     )
-    return f'[{timestamp_}]    [{status}] {message}'
+    return f"[{timestamp_}]    [{status}] {message}"
 
 
 def print_fail(message):

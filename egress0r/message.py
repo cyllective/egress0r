@@ -30,7 +30,7 @@ class Message:
 
     def print(self):
         indicator = self.INDICATOR_MAP[self.type_.name]
-        print(f'[{self.when}]    [{indicator}] {self.message}')
+        print(f"[{self.when}]    [{indicator}] {self.message}")
 
     def __str__(self):
         return (
