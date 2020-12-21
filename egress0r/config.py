@@ -33,7 +33,7 @@ def validate(config):
             "type": "dict",
             "required": True,
             "schema": {
-                "token": {"type": "string", "required": True},
+                "token": {"type": "string", "required": True, "empty": False},
                 "ipv4_url": {"type": "string", "required": True, "empty": False},
                 "ipv6_url": {"type": "string", "required": True, "empty": False},
             },

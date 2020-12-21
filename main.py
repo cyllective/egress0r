@@ -1,5 +1,3 @@
-import os
-
 import colorama
 
 from egress0r import config, constants, factory, sanity

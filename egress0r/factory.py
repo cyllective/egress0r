@@ -1,12 +1,8 @@
 import traceback
 
 from egress0r import sanity
-from egress0r.checks.ftp import FTPCheck
-from egress0r.checks.http import HTTPVerbsCheck
-from egress0r.checks.icmp import ICMPCheck
-from egress0r.checks.dns_ import DNSCheck, Query
-from egress0r.checks.port import PortCheck
-from egress0r.checks.smtp import SMTPCheck
+from egress0r.checks import FTPCheck, HTTPVerbsCheck, ICMPCheck, DNSCheck, PortCheck, SMTPCheck
+from egress0r.checks.dns_ import Query
 from egress0r.payload import DNSExfilPayload, ExfilPayload, SMTPExfilPayload
 
 

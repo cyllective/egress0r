@@ -1,5 +1,6 @@
 import socket
 import ipaddress
+import traceback
 
 import urllib3
 import netifaces
@@ -50,12 +51,12 @@ def _auth_ipv4(url, token):
     if response.status_code != 200:
         message = response.json().get("message")
         if message:
-            print_fail(message)
+            print_fail(f"IPv4 auth verification failed: {message}")
         else:
             print_fail("Failed to verify egress0r token for IPv4")
         return False
 
-    print_info("IPv4 authenticated")
+    print_info("IPv4 token authenticated")
     return True
 
 
@@ -64,32 +65,32 @@ def _auth_ipv6(url, token):
         response = requests.post(
             url, json={"token": token}, family=socket.AF_INET6, timeout=3
         )
-    except requests.exceptions.RequestException:
+    except requests.exceptions.RequestException as e:
         print_fail("Failed to verify egress0r token for IPv6")
         return False
     if response.status_code != 200:
         message = response.json().get("message")
         if message:
-            print_fail(message)
+            print_fail(f"IPv6 auth verification failed: {message}")
         else:
             print_fail("Failed to verify egress0r token for IPv6")
         return False
 
-    print_info("IPv6 authenticated")
+    print_info("IPv6 token authenticated")
     return True
 
 
 def auth_check(cfg):
     token = cfg["auth"]["token"]
+    ipv4_outcome = True
     if HAS_IPV4_ADDR:
-        if not _auth_ipv4(cfg["auth"]["ipv4_url"], token):
-            return False
+        ipv4_outcome = _auth_ipv4(cfg["auth"]["ipv4_url"], token)
 
+    ipv6_outcome = True
     if HAS_IPV6_ADDR:
-        if not _auth_ipv6(cfg["auth"]["ipv6_url"], token):
-            return False
+        ipv6_outcome = _auth_ipv6(cfg["auth"]["ipv6_url"], token)
 
-    return True
+    return ipv4_outcome and ipv6_outcome
 
 
 def override_check(cfg):

@@ -140,3 +140,5 @@ config.yml
 .python-version
 poetry.lock
 pyproject.toml
+config*.yml
+!config.dist.yml
