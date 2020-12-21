@@ -206,7 +206,7 @@ You might have to escape some chars for the password to work.*
 ## License
 
 ```
-Copyright &copy; 2019 cyllective AG
+Copyright &copy; 2020 cyllective AG
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
