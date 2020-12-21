@@ -72,7 +72,8 @@ The `sanity` section allows you to forcefully enable or disable IPv4 and or IPv6
 
 ### auth
 
-The `auth` section allows you to forcefully enable or disable IPv4 and or IPv6 checks.
+The (new) `auth` section handles the egress0r token validation. You only have
+to populate the `auth:token` field with your token.
 
 | Key           | Accepted values       | Description |
 |---------------|-----------------------|-------------|
