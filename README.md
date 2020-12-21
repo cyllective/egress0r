@@ -13,6 +13,16 @@ this might give you some insight :)
 + Python 3.6+
 + libcurl-devel for pycurl
 + virtualenv
++ egress0r token*
+
+
+### egress0r token
+
+Due to unfortunate circumstances we had to restrict access to the public facing egress0r.io services.  
+As such, it is now required to sign up for an egress0r token over at [egress0r.io](https://egress0r.io).  
+
+Once you've signed up with your email address and got your token, configure it
+in your `config.yml` file under the `auth` configuration section.
 
 
 ## Running local
@@ -57,6 +67,18 @@ The `sanity` section allows you to forcefully enable or disable IPv4 and or IPv6
 |---------------|-----------------------|-------------|
 | override:ipv4 | 'enable' / 'disable' / NULL   | Forcefully enable or disable IPv4 checks, NULL doesn't override |
 | override:ipv6 | 'enable' / 'disable' / NULL   | Forcefully enable or disable IPv6 checks, NULL doesn't override |
+
+
+
+### auth
+
+The `auth` section allows you to forcefully enable or disable IPv4 and or IPv6 checks.
+
+| Key           | Accepted values       | Description |
+|---------------|-----------------------|-------------|
+| token         | Your egress0r token   | The egress0r token grants you access to egress0r.io, it is mandatory.
+| ipv4_url      | url for ipv4 authentication   | This url points to `https://egress0r.io/auth/ipv4`, this endpoint handles the egress0r token validation. |
+| ipv6_url      | url for ipv6 authentication   | This url points to `https://egress0r.io/auth/ipv6`, this endpoint handles the egress0r token validation. |
 
 
 ### check
