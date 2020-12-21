@@ -28,9 +28,9 @@ class Message:
             self.type_ = MessageType.INFO
         self.when = when or datetime.datetime.utcnow()
 
-    def print(self, indent=4):
+    def print(self):
         indicator = self.INDICATOR_MAP[self.type_.name]
-        print(f'{" "*indent}[{self.when}]    [{indicator}] {self.message}')
+        print(f'[{self.when}]    [{indicator}] {self.message}')
 
     def __str__(self):
         return (

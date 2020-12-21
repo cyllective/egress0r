@@ -6,21 +6,21 @@ import string
 import colorama
 
 
-def _fmt_msg(status, message, indent=4, timestamp=None):
+def _fmt_msg(status, message, timestamp=None):
     timestamp_ = timestamp or datetime.datetime.utcnow().strftime(
         "%Y-%m-%d %H:%M:%S.%f"
     )
-    return f'{" "*indent}[{timestamp_}]    [{status}] {message}'
+    return f'[{timestamp_}]    [{status}] {message}'
 
 
-def print_fail(message, indent=4):
+def print_fail(message):
     status = colorama.Fore.LIGHTRED_EX + "x" + colorama.Fore.RESET
-    print(_fmt_msg(status, message, indent))
+    print(_fmt_msg(status, message))
 
 
-def print_info(message, indent=4):
+def print_info(message):
     status = colorama.Fore.LIGHTCYAN_EX + "*" + colorama.Fore.RESET
-    print(_fmt_msg(status, message, indent))
+    print(_fmt_msg(status, message))
 
 
 def random_filename(length=15, extension=None):
