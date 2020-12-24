@@ -13,8 +13,9 @@ sanity:
 
 auth:
   token: "<YOUR EGRESS0R TOKEN HERE>"
-  ipv4_url: "https://egress0r.io/auth/ipv4"
-  ipv6_url: "https://egress0r.io/auth/ipv6"
+  domain: 'egress0r.io'
+  ipv4_url: "https://116.202.182.197/auth/ipv4"
+  ipv6_url: "https://[2a01:4f8:1c1c:b4c0::3]/auth/ipv6"
 
 check:
   port: true
