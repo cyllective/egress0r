@@ -43,7 +43,7 @@ def has_ipv6_addr():
 def _auth_ipv4(url, token):
     try:
         response = requests.post(
-            url, json={"token": token}, family=socket.AF_INET, timeout=3
+            url, json={"token": token}, family=socket.AF_INET, timeout=3,
         )
     except requests.exceptions.RequestException:
         print_fail("Failed to verify egress0r token for IPv4")
