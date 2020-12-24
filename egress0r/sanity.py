@@ -1,16 +1,17 @@
 import socket
-import ipaddress
 import traceback
+import ipaddress
 
-import urllib3
 import netifaces
+import requests
+from requests_toolbelt.adapters import host_header_ssl
 
 from egress0r import config
 from egress0r.utils import print_fail, print_info
-import egress0r.requests_wrapper as requests
 
 HAS_IPV4_ADDR = None
 HAS_IPV6_ADDR = None
+
 
 
 def has_ipv4_addr():
@@ -40,12 +41,18 @@ def has_ipv6_addr():
     return False
 
 
-def _auth_ipv4(url, token):
+def _auth_ipv4(url, domain, token):
     try:
-        response = requests.post(
-            url, json={"token": token}, family=socket.AF_INET, timeout=3,
-        )
+        with requests.Session() as session:
+            session.mount('https://', host_header_ssl.HostHeaderSSLAdapter())
+            response = session.post(
+                url,
+                json={"token": token},
+                timeout=3,
+                headers={"Host": domain},
+            )
     except requests.exceptions.RequestException:
+        traceback.print_exc()
         print_fail("Failed to verify egress0r token for IPv4")
         return False
     if response.status_code != 200:
@@ -60,12 +67,18 @@ def _auth_ipv4(url, token):
     return True
 
 
-def _auth_ipv6(url, token):
+def _auth_ipv6(url, domain, token):
     try:
-        response = requests.post(
-            url, json={"token": token}, family=socket.AF_INET6, timeout=3
-        )
-    except requests.exceptions.RequestException as e:
+        with requests.Session() as session:
+            session.mount('https://', host_header_ssl.HostHeaderSSLAdapter())
+            response = session.post(
+                url,
+                json={"token": token},
+                timeout=3,
+                headers={"Host": domain},
+            )
+    except requests.exceptions.RequestException:
+        traceback.print_exc()
         print_fail("Failed to verify egress0r token for IPv6")
         return False
     if response.status_code != 200:
@@ -81,14 +94,15 @@ def _auth_ipv6(url, token):
 
 
 def auth_check(cfg):
+    auth_domain = cfg["auth"]["domain"]
     token = cfg["auth"]["token"]
     ipv4_outcome = True
     if HAS_IPV4_ADDR:
-        ipv4_outcome = _auth_ipv4(cfg["auth"]["ipv4_url"], token)
+        ipv4_outcome = _auth_ipv4(cfg["auth"]["ipv4_url"], auth_domain, token)
 
     ipv6_outcome = True
     if HAS_IPV6_ADDR:
-        ipv6_outcome = _auth_ipv6(cfg["auth"]["ipv6_url"], token)
+        ipv6_outcome = _auth_ipv6(cfg["auth"]["ipv6_url"], auth_domain, token)
 
     return ipv4_outcome and ipv6_outcome
 
