@@ -56,7 +56,6 @@ and apply your configuration in there. It provides you with sane defaults from
 which you can build upon.
 
 The following sections define the individual configuration options you can apply.
-To get started quickly, it suffices to only replace the `from_addr` in the `smtp` section.
 
 
 ### sanity
@@ -77,9 +76,7 @@ to populate the `auth:token` field with your token.
 
 | Key           | Accepted values       | Description |
 |---------------|-----------------------|-------------|
-| token         | Your egress0r token   | The egress0r token grants you access to egress0r.io, it is mandatory.
-| ipv4_url      | url for ipv4 authentication   | This url points to `https://egress0r.io/auth/ipv4`, this endpoint handles the egress0r token validation. |
-| ipv6_url      | url for ipv6 authentication   | This url points to `https://egress0r.io/auth/ipv6`, this endpoint handles the egress0r token validation. |
+| token         | Your egress0r token   | The egress0r token grants you access to egress0r.io, it is mandatory. |
 
 
 ### check
